@@ -260,7 +260,7 @@ public class PieceTest extends TestCase {
 			thrown = true;
 			assertTrue(e.getMessage().contains("Could not parse x,y string"));
 		}
-		assertTrue("Should have thrown RuntimeException for bad string", thrown);
+		assertTrue(thrown);
 	}
 
 	public void testGetBody() {
