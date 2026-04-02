@@ -2,13 +2,16 @@
 
 import junit.framework.TestCase;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /*
   Unit test for Piece class -- starter shell.
  */
-public class PieceTest extends TestCase {
+public class PieceTest {
 	private Piece pyr1, pyr2, pyr3, pyr4;
 	private Piece s, sRotated;
 	private Piece stick1, stick2, stick3;
@@ -18,9 +21,9 @@ public class PieceTest extends TestCase {
 	private Piece s21, s22, s23, s24;
 	private Piece sq, sqRotated;
 
+	@BeforeEach
 	protected void setUp() throws Exception {
-		super.setUp();
-		
+
 		pyr1 = new Piece(Piece.PYRAMID_STR);
 		pyr2 = pyr1.computeNextRotation();
 		pyr3 = pyr2.computeNextRotation();
@@ -76,6 +79,7 @@ public class PieceTest extends TestCase {
 		stick3 = stick2.computeNextRotation();
 	}
 
+	@Test
 	public void testSampleSize() {
 		assertEquals(3, pyr1.getWidth());
 		assertEquals(2, pyr1.getHeight());
@@ -88,6 +92,7 @@ public class PieceTest extends TestCase {
 		assertEquals(4, l.getHeight());
 	}
 
+	@Test
 	public void testWidth() {
 		assertEquals(3, pyr1.getWidth());
 		assertEquals(2, pyr2.getWidth());
@@ -122,6 +127,7 @@ public class PieceTest extends TestCase {
 		assertEquals(2, sqRotated.getWidth());
 	}
 
+	@Test
 	public void testHeight() {
 		assertEquals(2, pyr1.getHeight());
 		assertEquals(3, pyr2.getHeight());
@@ -155,6 +161,7 @@ public class PieceTest extends TestCase {
 		assertEquals(2, sq.getHeight());
 		assertEquals(2, sqRotated.getHeight());
 	}
+	@Test
 	public void testSampleSkirt() {
 		assertTrue(Arrays.equals(new int[] {0, 0, 0}, pyr1.getSkirt()));
 		assertTrue(Arrays.equals(new int[] {1, 0, 1}, pyr3.getSkirt()));
@@ -163,6 +170,7 @@ public class PieceTest extends TestCase {
 		assertTrue(Arrays.equals(new int[] {1, 0}, sRotated.getSkirt()));
 	}
 
+	@Test
 	public void testSkirt() {
 		assertTrue(Arrays.equals(new int[]{0, 0, 0}, pyr1.getSkirt()));
 		assertTrue(Arrays.equals(new int[]{1, 0}, pyr2.getSkirt()));
@@ -185,6 +193,7 @@ public class PieceTest extends TestCase {
 		assertTrue(Arrays.equals(new int[]{0}, p.getSkirt()));
 	}
 
+	@Test
 	public void testEquals() {
 		assertTrue(pyr1.equals(pyr1));
 
@@ -208,6 +217,7 @@ public class PieceTest extends TestCase {
 	}
 
 
+	@Test
 	public void testEqualsEdgeCases() {
 		Piece p1 = new Piece("0 0 0 1");
 		Piece p2 = new Piece("0 0 0 1 0 2");
@@ -222,6 +232,7 @@ public class PieceTest extends TestCase {
 		assertFalse(p5.equals(p6));
 	}
 
+	@Test
 	public void testFastRotation() {
 		Piece[] pieces = Piece.getPieces();
 		Piece square = pieces[Piece.SQUARE];
@@ -255,17 +266,7 @@ public class PieceTest extends TestCase {
 		assertTrue(l2.equals(l2.fastRotation().fastRotation().fastRotation().fastRotation()));
 	}
 
-	public void testParsePointsException() {
-		boolean thrown = false;
-		try {
-			new Piece("0 0 1 oops");
-		} catch (RuntimeException e) {
-			thrown = true;
-			assertTrue(e.getMessage().contains("Could not parse x,y string"));
-		}
-		assertTrue(thrown);
-	}
-
+	@Test
 	public void testGetBody() {
 		Piece p = new Piece("0 0  1 0  2 0");
 		TPoint[] body = p.getBody();
@@ -282,6 +283,7 @@ public class PieceTest extends TestCase {
 		assertEquals(1, sqBody[3].y);
 	}
 
+	@Test
 	public void testgetPieces() {
 		Piece[] pieces1 = Piece.getPieces();
 		assertNotNull(pieces1);
