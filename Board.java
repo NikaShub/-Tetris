@@ -1,5 +1,7 @@
 // Board.java
 
+import java.util.Arrays;
+
 /**
  CS108 Tetris Board.
  Represents a Tetris board -- essentially a 2-d grid
@@ -15,6 +17,13 @@ public class Board	{
 	private boolean[][] grid;
 	private boolean DEBUG = true;
 	boolean committed;
+	private int[] rowWidth, columnHeight;
+	private int maxHeight;
+	private boolean[][] backupGrid;
+	private int[] backupRowWidth;
+	private int[] backupColumnHeight;
+	private int backupMaxHeight;
+
 	
 	
 	// Here a few trivial methods are provided:
@@ -28,8 +37,13 @@ public class Board	{
 		this.height = height;
 		grid = new boolean[width][height];
 		committed = true;
-		
-		// YOUR CODE HERE
+		maxHeight = 0;
+		rowWidth = new int[height];
+		columnHeight = new int[width];
+		backupGrid = new boolean[width][height];
+		backupRowWidth = new int[height];
+		backupColumnHeight = new int[width];
+		backupMaxHeight = 0;
 	}
 	
 	
@@ -54,7 +68,7 @@ public class Board	{
 	 For an empty board this is 0.
 	*/
 	public int getMaxHeight() {	 
-		return 0; // YOUR CODE HERE
+		return maxHeight;
 	}
 	
 	
@@ -64,7 +78,31 @@ public class Board	{
 	*/
 	public void sanityCheck() {
 		if (DEBUG) {
-			// YOUR CODE HERE
+			int[] checkRowWidth = new int[height];
+			int[] checkColumnHeight = new int[width];
+			int checkMaxHeight = 0;
+			for (int x = 0; x < width; x++) {
+				for (int y = 0; y < height; y++) {
+					if (grid[x][y]) {
+						checkRowWidth[y]++;
+						if (y + 1 > checkColumnHeight[x]) checkColumnHeight[x] = y + 1;
+						if (y + 1 > checkMaxHeight) checkMaxHeight = y + 1;
+					}
+				}
+			}
+			if (checkMaxHeight != maxHeight) {
+				throw new RuntimeException("maxHeight is wrong! " + checkMaxHeight + "instead of: " + maxHeight);
+			}
+			for (int x = 0; x < width; x++) {
+				if (checkColumnHeight[x] != columnHeight[x]) {
+					throw new RuntimeException("columnHeight is wrong! " + checkColumnHeight[x]  + "instead of: " + columnHeight[x]);
+				}
+			}
+			for (int y = 0; y < height; y++) {
+				if (checkRowWidth[y] != rowWidth[y]) {
+					throw new RuntimeException("rowWidth is wrong! " + checkRowWidth[y]  + "instead of: " + rowWidth[y]);
+				}
+			}
 		}
 	}
 	
@@ -78,7 +116,16 @@ public class Board	{
 	 to compute this fast -- O(skirt length).
 	*/
 	public int dropHeight(Piece piece, int x) {
-		return 0; // YOUR CODE HERE
+		int[] skirt = piece.getSkirt();
+		int dropY = 0;
+		for (int i = 0; i < piece.getWidth(); i++) {
+			int boardX = i + x;
+			if (boardX >= 0 && boardX < width) {
+				int curY = getColumnHeight(boardX) - skirt[i];
+				if (curY > dropY) dropY = curY;
+			}
+		}
+		return dropY;
 	}
 	
 	
@@ -88,7 +135,7 @@ public class Board	{
 	 The height is 0 if the column contains no blocks.
 	*/
 	public int getColumnHeight(int x) {
-		return 0; // YOUR CODE HERE
+		return columnHeight[x];
 	}
 	
 	
@@ -97,7 +144,7 @@ public class Board	{
 	 the given row.
 	*/
 	public int getRowWidth(int y) {
-		 return 0; // YOUR CODE HERE
+		 return rowWidth[y];
 	}
 	
 	
@@ -107,7 +154,8 @@ public class Board	{
 	 always return true.
 	*/
 	public boolean getGrid(int x, int y) {
-		return false; // YOUR CODE HERE
+		if (x < 0 || x >= width || y < 0 || y >= height) return true;
+		return grid[x][y];
 	}
 	
 	
@@ -131,13 +179,29 @@ public class Board	{
 	 state. The client can use undo(), to recover the valid, pre-place state.
 	*/
 	public int place(Piece piece, int x, int y) {
-		// flag !committed problem
 		if (!committed) throw new RuntimeException("place commit problem");
-			
+		System.arraycopy(rowWidth, 0, backupRowWidth, 0, height);
+		System.arraycopy(columnHeight, 0, backupColumnHeight, 0, width);
+		for (int i = 0; i < width; i++) {
+			System.arraycopy(grid[i], 0, backupGrid[i], 0, height);
+		}
+		backupMaxHeight = maxHeight;
+		committed = false;
 		int result = PLACE_OK;
-		
-		// YOUR CODE HERE
-		
+		if (x < 0 || x + piece.getWidth() > width || y < 0 || y + piece.getHeight() > height) return PLACE_OUT_BOUNDS;
+		TPoint[] body = piece.getBody();
+		for (int i = 0; i < body.length; i++) {
+			int currX = x + body[i].x;
+			int currY = y + body[i].y;
+			if (grid[currX][currY]) return PLACE_BAD;
+			grid[currX][currY] = true;
+			rowWidth[currY]++;
+			if (currY + 1 > columnHeight[currX]) {
+				columnHeight[currX] = currY + 1;
+				if (columnHeight[currX] > maxHeight) maxHeight = columnHeight[currX];
+			}
+			if (rowWidth[currY] == width) result = PLACE_ROW_FILLED;
+		}
 		return result;
 	}
 	
@@ -148,7 +212,45 @@ public class Board	{
 	*/
 	public int clearRows() {
 		int rowsCleared = 0;
-		// YOUR CODE HERE
+		if (committed) {
+			System.arraycopy(rowWidth, 0, backupRowWidth, 0, height);
+			System.arraycopy(columnHeight, 0, backupColumnHeight, 0, width);
+			for (int i = 0; i < width; i++) {
+				System.arraycopy(grid[i], 0, backupGrid[i], 0, height);
+			}
+			backupMaxHeight = maxHeight;
+			committed = false;
+		}
+		int toY = 0;
+		for (int fromY = 0; fromY < maxHeight; fromY++) {
+			if (rowWidth[fromY] == width) rowsCleared++;
+			else {
+				if (toY != fromY) {
+					for (int i = 0; i < width; i++) {
+						grid[i][toY] = grid[i][fromY];
+					}
+					rowWidth[toY] = rowWidth[fromY];
+				}
+				toY++;
+			}
+		}
+		for (int y = toY; y < maxHeight; y++) {
+			for (int x = 0; x < width; x++) {
+				grid[x][y] = false;
+			}
+			rowWidth[y] = 0;
+		}
+		maxHeight = 0;
+		for (int x = 0; x < width; x++) {
+			columnHeight[x] = 0;
+			for (int j = height - 1; j >= 0; j--) {
+				if (grid[x][j]) {
+					columnHeight[x] = j + 1;
+					if (columnHeight[x] > maxHeight) maxHeight = columnHeight[x];
+					break;
+				}
+			}
+		}
 		sanityCheck();
 		return rowsCleared;
 	}
@@ -163,7 +265,18 @@ public class Board	{
 	 See the overview docs.
 	*/
 	public void undo() {
-		// YOUR CODE HERE
+		if (committed) return;
+		boolean[][] tempGrid = grid;
+		grid = backupGrid;
+		backupGrid = tempGrid;
+		int[] tempWidths = rowWidth;
+		rowWidth = backupRowWidth;
+		backupRowWidth = tempWidths;
+		int[] tempHeights = columnHeight;
+		columnHeight = backupColumnHeight;
+		backupColumnHeight = tempHeights;
+		maxHeight = backupMaxHeight;
+		commit();
 	}
 	
 	

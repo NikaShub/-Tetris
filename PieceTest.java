@@ -1,4 +1,7 @@
+
+
 import junit.framework.TestCase;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.*;
 
@@ -72,7 +75,7 @@ public class PieceTest extends TestCase {
 		stick2 = stick1.computeNextRotation();
 		stick3 = stick2.computeNextRotation();
 	}
-	
+
 	public void testSampleSize() {
 		assertEquals(3, pyr1.getWidth());
 		assertEquals(2, pyr1.getHeight());
