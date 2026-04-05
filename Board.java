@@ -71,7 +71,7 @@ public class Board	{
 		return maxHeight;
 	}
 	
-	
+
 	/**
 	 Checks the board for internal consistency -- used
 	 for debugging.
@@ -240,6 +240,12 @@ public class Board	{
 			}
 			rowWidth[y] = 0;
 		}
+		calculateMaxHeight();
+		sanityCheck();
+		return rowsCleared;
+	}
+
+	public void calculateMaxHeight() {
 		maxHeight = 0;
 		for (int x = 0; x < width; x++) {
 			columnHeight[x] = 0;
@@ -251,8 +257,6 @@ public class Board	{
 				}
 			}
 		}
-		sanityCheck();
-		return rowsCleared;
 	}
 
 
